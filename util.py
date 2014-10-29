@@ -2,6 +2,7 @@ import wx
 import os
 import re
 import time
+import calendar
 import base64
 import calendar
 import urllib2
@@ -70,7 +71,15 @@ def get_top_window(window):
 def get(obj, key, default):
     value = obj.get(key, None)
     return value or default
-    
+
+def get_pubDate(obj, default):
+    value = get(obj, 'published_parsed', None)
+    if value == None:
+        value = get(obj, 'updated_parsed', default)# Default None for create_id , Default current_time for timestamp
+    if not value == None :
+        value = calendar.timegm(value)
+    return value or default
+
 def abspath(path):
     path = os.path.abspath(path)
     path = 'file:///%s' % path.replace('\\', '/')
@@ -143,7 +152,7 @@ def guess_polling_interval(entries):
         return settings.DEFAULT_POLLING_INTERVAL
     timestamps = []
     for entry in entries:
-        timestamp = calendar.timegm(get(entry, 'date_parsed', time.gmtime()))
+        timestamp = calendar.timegm(get(entry, 'published_parsed', time.gmtime()))
         timestamps.append(timestamp)
     timestamps.sort()
     durations = [b - a for a, b in zip(timestamps, timestamps[1:])]

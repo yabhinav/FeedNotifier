@@ -16,7 +16,10 @@ def cmp_timestamp(a, b):
     
 def create_id(entry):
     keys = ['id', 'link', 'title']
-    values = tuple(util.get(entry, key, None) for key in keys)
+    values = list(util.get(entry, key, None) for key in keys)
+    pubDate_value = util.get_pubDate(entry, None) # Default should be None
+    values.append(pubDate_value)
+    values = tuple(values)
     return values if any(values) else uuid.uuid4().hex
     
 class Item(object):
@@ -131,9 +134,9 @@ class Feed(object):
             self.id_list.append(id)
             self.id_set.add(id)
             item = Item(self, id)
-            item.timestamp = calendar.timegm(util.get(entry, 'date_parsed', time.gmtime()))
             item.title = util.format(util.get(entry, 'title', ''), settings.POPUP_TITLE_LENGTH)
             item.description = util.format(util.get(entry, 'description', ''), settings.POPUP_BODY_LENGTH)
+            item.timestamp = util.get_pubDate(entry, time.gmtime())# Default should be current time
             item.link = util.get(entry, 'link', '')
             item.author = util.format(util.get(entry, 'author', '')) # TODO: max length
             if all(filter.filter(item) for filter in filters):
